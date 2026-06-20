@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useCurrentAccount, useSignAndExecuteTransaction, ConnectButton } from '@mysten/dapp-kit';
 import { useAuthStore } from '../store/authStore';
 import { generateMLKEMKeypair, saveKeypairToStorage, loadKeypairFromStorage } from '../lib/crypto/keygen';
@@ -8,8 +9,6 @@ import { api } from '../lib/api/client';
 
 type Step = 'connect' | 'signing' | 'registering' | 'done' | 'error';
 
-// Module-level flag — survives React StrictMode unmount/remount cycles
-// so signPersonalMessage is never called twice for the same account connect.
 let loginInFlight = false;
 
 export function LoginPage() {
@@ -28,7 +27,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (!account) {
-      loginInFlight = false; // wallet disconnected — allow fresh login
+      loginInFlight = false;
       return;
     }
     if (loginInFlight) return;
@@ -38,15 +37,12 @@ export function LoginPage() {
       try {
         const address = account!.address;
 
-        // 1. Get a fresh HMAC-signed nonce for this address
         setStep('signing');
         const { nonce } = await api.get(`/auth/nonce?address=${address}`);
 
-        // 2. Exchange address + nonce for JWT (HMAC proves freshness)
         const { access_token } = await api.post('/auth/login', { address, nonce });
         login(address, access_token);
 
-        // 4. ML-KEM keypair
         let keypair = loadKeypairFromStorage();
         if (!keypair) {
           keypair = await generateMLKEMKeypair();
@@ -54,11 +50,9 @@ export function LoginPage() {
         }
         setKeypair(keypair.pk, keypair.sk);
 
-        // 5. Always store public key in backend (works even without wallet signing)
         const pkBase64 = btoa(String.fromCharCode(...keypair.pk));
         await api.put('/users/pubkey', { pubKey: pkBase64 });
 
-        // 6. Also try to register on-chain (best-effort — requires wallet signing)
         try {
           const registered = await isRegistered(address);
           if (!registered) {
@@ -83,43 +77,87 @@ export function LoginPage() {
   }, [account]);
 
   const stepLabel: Record<Step, string> = {
-    connect: 'Connect your Sui wallet to continue',
-    signing: 'Authenticating…',
-    registering: 'Registering ML-KEM public key on-chain…',
-    done: 'Redirecting…',
+    connect: 'Connect your Sui wallet to initialise your agent identity',
+    signing: 'Authenticating agent…',
+    registering: 'Broadcasting ML-KEM public key to Sui network…',
+    done: 'Identity confirmed. Redirecting…',
     error: 'Authentication failed',
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#0a0a0a',
+    <div style={{
+      minHeight: '100vh',
+      background: '#0a0a0a',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        width: 480,
+        border: '2px solid white',
+        padding: 40,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          width: 480,
-          border: '2px solid white',
-          padding: 40,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 24,
-        }}
-      >
+        flexDirection: 'column',
+        gap: 24,
+      }}>
         {/* Logo */}
         <div>
-          <div
-            className="mono"
-            style={{ fontSize: 32, fontWeight: 700, letterSpacing: 4, textTransform: 'uppercase' }}
-          >
+          <div className="mono" style={{ fontSize: 32, fontWeight: 700, letterSpacing: 4, textTransform: 'uppercase' }}>
             QUBIT
           </div>
           <div style={{ color: '#E60023', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginTop: 4 }}>
-            POST-QUANTUM AGENT COMMUNICATION LAYER
+            POST QUANTUM AGENT COMMUNICATION LAYER
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)' }} />
+
+        {/* Demo links */}
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
+            LIVE DEMO · NO WALLET REQUIRED
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Link
+              to="/demo"
+              style={{
+                display: 'block', padding: '11px 14px',
+                border: '1px solid #E60023',
+                color: '#E60023', fontSize: 11, fontWeight: 700,
+                letterSpacing: 2, textTransform: 'uppercase',
+                textDecoration: 'none', textAlign: 'center',
+              }}
+            >
+              ▶ WATCH AGENTS COMMUNICATE
+            </Link>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Link
+                to="/agent/$role"
+                params={{ role: 'alpha' }}
+                style={{
+                  flex: 1, display: 'block', padding: '9px 0',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)', fontSize: 10,
+                  fontWeight: 700, letterSpacing: 1.5,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                AGENT α · SENDER
+              </Link>
+              <Link
+                to="/agent/$role"
+                params={{ role: 'beta' }}
+                style={{
+                  flex: 1, display: 'block', padding: '9px 0',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)', fontSize: 10,
+                  fontWeight: 700, letterSpacing: 1.5,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                AGENT β · RECEIVER
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -127,10 +165,8 @@ export function LoginPage() {
 
         {/* Wallet connect */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div
-            style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}
-          >
-            WALLET LOGIN
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>
+            AGENT LOGIN
           </div>
           <ConnectButton />
         </div>
@@ -140,70 +176,18 @@ export function LoginPage() {
           {error ?? stepLabel[step]}
         </div>
 
-        {/* Judge / Demo links */}
+        {/* How it works */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
-            LIVE DEMO
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <a
-              href="/demo"
-              style={{
-                display: 'block', padding: '10px 14px',
-                border: '1px solid #E60023',
-                color: '#E60023', fontSize: 11, fontWeight: 700,
-                letterSpacing: 2, textTransform: 'uppercase',
-                textDecoration: 'none', textAlign: 'center',
-              }}
-            >
-              ▶ AGENT-TO-AGENT DEMO
-            </a>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <a
-                href="/agent/alpha"
-                style={{
-                  flex: 1, display: 'block', padding: '8px 0',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: 'rgba(255,255,255,0.6)', fontSize: 10,
-                  fontWeight: 700, letterSpacing: 1.5,
-                  textDecoration: 'none', textAlign: 'center',
-                }}
-              >
-                AGENT α
-              </a>
-              <a
-                href="/agent/beta"
-                style={{
-                  flex: 1, display: 'block', padding: '8px 0',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: 'rgba(255,255,255,0.6)', fontSize: 10,
-                  fontWeight: 700, letterSpacing: 1.5,
-                  textDecoration: 'none', textAlign: 'center',
-                }}
-              >
-                AGENT β
-              </a>
-            </div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textAlign: 'center', letterSpacing: 0.5 }}>
-              No wallet required to view the demo
-            </div>
-          </div>
-        </div>
-
-        {/* What happens */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 16 }}>
-          <div
-            style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}
-          >
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>
             HOW IT WORKS
           </div>
           <ol style={{ margin: 0, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {[
-              'Connect wallet — your Sui address is your agent identity',
-              'ML-KEM-768 keypair generated locally (NIST FIPS 203)',
-              'Public key registered on-chain — any agent can look it up',
-              'Instructions encrypted end-to-end — server stores only ciphertext',
-              'Quantum-resistant by default — secure against future adversaries',
+              'Connect wallet · your Sui address becomes your agent identity',
+              'ML KEM 768 keypair generated locally in your browser',
+              'Public key registered onchain · any agent can discover you',
+              'Instructions encrypted end to end · server stores ciphertext only',
+              'Quantum resistant by default · secure against future adversaries',
             ].map((text, i) => (
               <li key={i} style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
                 {text}
