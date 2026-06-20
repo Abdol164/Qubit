@@ -7,6 +7,8 @@ import { decryptMessage } from '../lib/crypto/decrypt';
 import { api } from '../lib/api/client';
 import type { WsMessage } from '../hooks/useSocket';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 const AGENTS = {
   alpha: {
     label: 'Agent Alpha',
@@ -119,7 +121,7 @@ export function AgentPage() {
     // 3. Push pubkey to backend
     push('sys', 'Registering ML-KEM public key with Qubit…');
     try {
-      await fetch('http://localhost:3001/api/users/pubkey', {
+      await fetch(`${API}/api/users/pubkey`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ pubKey: toB64(pk) }),
@@ -131,7 +133,7 @@ export function AgentPage() {
 
     // 4. Connect WebSocket
     push('sys', 'Opening WebSocket to Qubit gateway…');
-    const socket = io('http://localhost:3001', {
+    const socket = io(API, {
       auth: { token: tokenRef.current },
       transports: ['websocket'],
     });
@@ -162,7 +164,7 @@ export function AgentPage() {
         push('ok', `Decrypted: "${parsed.memo}"`);
         push('sys', `Task: ${parsed.task}  ·  Amount: ${parsed.amount_mist} MIST`);
         push('sys', 'Executing Sui transaction autonomously…');
-        const execResp = await fetch('http://localhost:3001/api/demo/execute', {
+        const execResp = await fetch(`${API}/api/demo/execute`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recipient: parsed.recipient, amount_mist: parsed.amount_mist }),
@@ -183,7 +185,7 @@ export function AgentPage() {
 
     push('sys', `Fetching Agent Beta's ML-KEM public key…`);
     try {
-      const resp = await fetch(`http://localhost:3001/api/users/${agent.peer}/pubkey`);
+      const resp = await fetch(`${API}/api/users/${agent.peer}/pubkey`);
       const { pubKey } = await resp.json();
       const peerPk = fromB64(pubKey);
       push('ok', `Peer pubkey: ${peerPk.length}B`);
@@ -202,7 +204,7 @@ export function AgentPage() {
       push('ok', `AES-GCM CT: ${payload.ciphertext.slice(0, 24)}…  (${Math.round(payload.ciphertext.length * 3 / 4)}B)`);
       push('sys', 'Sending via Qubit secure channel…');
 
-      await fetch('http://localhost:3001/api/messages', {
+      await fetch(`${API}/api/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ recipientAddress: agent.peer, ...payload }),

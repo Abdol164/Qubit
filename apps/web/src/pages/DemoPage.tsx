@@ -6,6 +6,8 @@ import { generateMLKEMKeypair } from '../lib/crypto/keygen';
 import { api } from '../lib/api/client';
 import type { WsMessage } from '../hooks/useSocket';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 const ALPHA_ADDR = '0x1a40bbc071a16ecbc7cdd7309b0e36d33d823a3d6b985e894f60761c12a40ead';
 const BETA_ADDR  = '0x1c31ef3164517d63c6feb49305590a7cb6dbfff2486d4fb4bd274e14ea455045';
 
@@ -205,12 +207,12 @@ export function DemoPage() {
       sysBeta('Pushing ML-KEM public key to Qubit registry…');
       const toB64 = (b: Uint8Array) => btoa(String.fromCharCode(...b));
       await Promise.all([
-        fetch('http://localhost:3001/api/users/pubkey', {
+        fetch(`${API}/api/users/pubkey`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${alphaToken}` },
           body: JSON.stringify({ pubKey: toB64(alphaPk) }),
         }),
-        fetch('http://localhost:3001/api/users/pubkey', {
+        fetch(`${API}/api/users/pubkey`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${betaToken}` },
           body: JSON.stringify({ pubKey: toB64(betaPk) }),
@@ -225,7 +227,7 @@ export function DemoPage() {
       setPhase('fetch');
       sysAlpha(`Fetching Agent Beta's public key…`);
       await wait(600);
-      const pkResp = await fetch(`http://localhost:3001/api/users/${BETA_ADDR}/pubkey`);
+      const pkResp = await fetch(`${API}/api/users/${BETA_ADDR}/pubkey`);
       const { pubKey: betaPkB64 } = await pkResp.json();
       const fetchedBetaPk = Uint8Array.from(atob(betaPkB64), c => c.charCodeAt(0));
       sysAlpha(`Beta's ML-KEM pk: ${fetchedBetaPk.length}B ✓`);
@@ -252,7 +254,7 @@ export function DemoPage() {
       sysBeta('Connecting to Qubit gateway via WebSocket…');
 
       await new Promise<void>((resolve, reject) => {
-        const betaSocket = io('http://localhost:3001', {
+        const betaSocket = io(API, {
           auth: { token: betaToken },
           transports: ['websocket'],
         });
@@ -271,7 +273,7 @@ export function DemoPage() {
           await wait(300);
           sysAlpha('Sending via Qubit secure channel…');
 
-          await fetch('http://localhost:3001/api/messages', {
+          await fetch(`${API}/api/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${alphaToken}` },
             body: JSON.stringify({ recipientAddress: BETA_ADDR, ...payload }),

@@ -17,7 +17,7 @@ function authHeaders(): HeadersInit {
   };
 }
 
-const BASE = 'http://localhost:3001/api';
+const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:3001') + '/api';
 
 async function handleResponse(res: Response) {
   if (!res.ok) {

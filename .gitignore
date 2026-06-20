@@ -13,6 +13,10 @@ apps/api/.env
 apps/api/.env.*
 apps/web/.env
 apps/web/.env.*
+# But allow example templates
+!.env.example
+!apps/api/.env.example
+!apps/web/.env.example
 
 # Demo agent private keys — never commit
 demo-agents.json
