@@ -140,6 +140,56 @@ export function LoginPage() {
           {error ?? stepLabel[step]}
         </div>
 
+        {/* Judge / Demo links */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 16 }}>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
+            LIVE DEMO
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <a
+              href="/demo"
+              style={{
+                display: 'block', padding: '10px 14px',
+                border: '1px solid #E60023',
+                color: '#E60023', fontSize: 11, fontWeight: 700,
+                letterSpacing: 2, textTransform: 'uppercase',
+                textDecoration: 'none', textAlign: 'center',
+              }}
+            >
+              ▶ AGENT-TO-AGENT DEMO
+            </a>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <a
+                href="/agent/alpha"
+                style={{
+                  flex: 1, display: 'block', padding: '8px 0',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)', fontSize: 10,
+                  fontWeight: 700, letterSpacing: 1.5,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                AGENT α
+              </a>
+              <a
+                href="/agent/beta"
+                style={{
+                  flex: 1, display: 'block', padding: '8px 0',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)', fontSize: 10,
+                  fontWeight: 700, letterSpacing: 1.5,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                AGENT β
+              </a>
+            </div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textAlign: 'center', letterSpacing: 0.5 }}>
+              No wallet required to view the demo
+            </div>
+          </div>
+        </div>
+
         {/* What happens */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 16 }}>
           <div
