@@ -1,0 +1,9 @@
+[package]
+name = "qubit_contract"
+edition = "2024.beta"
+version = "1.0.0"
+
+[dependencies]
+
+[addresses]
+qubit = "0x0"

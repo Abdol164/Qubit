@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  address      String   @unique
+  nickname     String?
+  mlkemPubKey  String?  // base64-encoded ML-KEM-768 public key (fallback when not on-chain)
+  createdAt    DateTime @default(now())
+
+  sentMessages     Message[] @relation("sender")
+  receivedMessages Message[] @relation("recipient")
+}
+
+model Message {
+  id            String   @id @default(uuid())
+  senderId      String
+  recipientId   String
+  kemCiphertext String
+  ciphertext    String
+  nonce         String
+  createdAt     DateTime @default(now())
+
+  sender    User @relation("sender",    fields: [senderId],    references: [id])
+  recipient User @relation("recipient", fields: [recipientId], references: [id])
+}

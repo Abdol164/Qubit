@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QUBIT | Post-Quantum Security Layer on Sui</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  * { border-radius: 0 !important; box-sizing: border-box; }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+
+  body {
+    background-color: #0a0a0a;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .grid-line-v {
+    position: absolute; top: 0; bottom: 0;
+    width: 1px; background-color: rgba(255,255,255,0.08); z-index: 0;
+  }
+  .grid-line-h {
+    position: absolute; left: 0; right: 0;
+    height: 1px; background-color: rgba(255,255,255,0.08); z-index: 0;
+  }
+
+  .scanline {
+    width: 100%; height: 2px;
+    background: rgba(230, 0, 35, 0.12);
+    position: absolute; top: 0; left: 0;
+    z-index: 10; pointer-events: none;
+    animation: scan 8s linear infinite;
+  }
+  @keyframes scan {
+    0% { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 20px rgba(230, 0, 35, 0.35);
+  }
+
+  .bar-chart div {
+    background-color: #E60023;
+  }
+
+  ::selection { background: #E60023; color: #fff; }
+</style>
+<script id="tailwind-config">
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg:        '#0a0a0a',
+          surface:   '#111111',
+          'surface-hi': '#161616',
+          'surface-lo': '#0d0d0d',
+          border:    'rgba(255,255,255,0.12)',
+          'border-bright': 'rgba(255,255,255,0.25)',
+          accent:    '#E60023',
+          'accent-dim': 'rgba(230,0,35,0.15)',
+          muted:     'rgba(255,255,255,0.45)',
+          dim:       'rgba(255,255,255,0.2)',
+        },
+        fontFamily: {
+          display: ['Space Grotesk', 'sans-serif'],
+          body:    ['Inter', 'sans-serif'],
+          mono:    ['JetBrains Mono', 'monospace'],
+        },
+        spacing: {
+          gutter: '32px',
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body>
+
+<!-- ─── NAVIGATION ─── -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-bg/90 backdrop-blur-md flex justify-between items-center px-gutter h-16 border-b border-border">
+  <div class="font-mono text-sm font-bold tracking-widest uppercase text-white">QUBIT_SYSTEM</div>
+  <div class="hidden md:flex items-center gap-8">
+    <a class="font-mono text-xs uppercase tracking-widest text-accent border-b-2 border-accent pb-1" href="#">PROTOCOL</a>
+    <a class="font-mono text-xs uppercase tracking-widest text-muted hover:text-white transition-colors" href="#">RESEARCH</a>
+    <a class="font-mono text-xs uppercase tracking-widest text-muted hover:text-white transition-colors" href="#">SECURITY</a>
+    <a class="font-mono text-xs uppercase tracking-widest text-muted hover:text-white transition-colors" href="#">DOCS</a>
+  </div>
+  <div class="flex items-center gap-4">
+    <button class="hidden md:block font-mono text-xs uppercase tracking-widest text-white border border-border px-4 py-2 hover:border-border-bright transition-all">CONNECT</button>
+    <button class="font-mono text-xs uppercase tracking-widest bg-accent text-white px-4 py-2 hover:brightness-110 glow-hover transition-all">INITIALIZE_NODE</button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<header class="relative min-h-screen flex flex-col pt-32 overflow-hidden">
+  <div class="grid-line-v left-8"></div>
+  <div class="grid-line-v right-8"></div>
+  <div class="grid-line-h" style="top:128px"></div>
+
+  <div class="container mx-auto px-gutter relative z-10 flex flex-col lg:flex-row items-center gap-16 py-16">
+
+    <!-- Left — copy -->
+    <div class="w-full lg:w-3/5 border-r border-border pr-6 lg:pr-16 py-16">
+      <div class="inline-block border border-accent px-2 py-1 mb-6">
+        <span class="font-mono text-xs text-accent uppercase tracking-widest">VERSION 1.0.4-BETA // NETWORK: SUI_TESTNET</span>
+      </div>
+      <h1 class="font-display text-4xl md:text-6xl font-bold uppercase leading-tight mb-6" style="letter-spacing:-0.02em">
+        The first post-quantum<br/><span class="text-accent">key registry</span> on Sui.
+      </h1>
+      <p class="font-body text-base text-muted max-w-xl mb-8 leading-relaxed">
+        The infrastructure for secure agentic coordination in the quantum era. Deploy, discover, and transmit encrypted data between AI agents with ML-KEM-768 precision.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <button class="bg-accent text-white font-mono text-xs uppercase tracking-widest px-8 py-4 flex items-center gap-2 hover:brightness-110 glow-hover transition-all">
+          READ THE DOCS <span class="material-symbols-outlined text-lg">menu_book</span>
+        </button>
+        <button class="border border-border text-white font-mono text-xs uppercase tracking-widest px-8 py-4 hover:border-border-bright hover:bg-surface transition-all">
+          VIEW ON GITHUB
+        </button>
+        <button class="text-muted font-mono text-xs uppercase tracking-widest px-4 py-4 hover:text-white transition-all flex items-center gap-2">
+          WATCH DEMO <span class="material-symbols-outlined text-lg">play_circle</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right — status panel -->
+    <div class="w-full lg:w-2/5 relative flex items-center justify-center">
+      <div class="absolute inset-0 bg-surface/20 border border-border overflow-hidden">
+        <div class="scanline"></div>
+      </div>
+      <div class="relative z-10 bg-bg border border-border-bright p-6 w-full max-w-sm font-mono text-xs">
+        <div class="flex justify-between border-b border-border pb-2 mb-2">
+          <span class="text-accent">SYSTEM_LOAD</span><span>0.003%</span>
+        </div>
+        <div class="flex justify-between border-b border-border pb-2 mb-2">
+          <span class="text-accent">ENTROPY_POOL</span><span>ACTIVE</span>
+        </div>
+        <div class="flex justify-between border-b border-border pb-2 mb-2">
+          <span class="text-accent">BLOCK_HEIGHT</span><span>84,932,103</span>
+        </div>
+        <div class="mt-4 h-24 bg-surface border border-border flex items-end p-2 gap-1 bar-chart">
+          <div class="w-full" style="height:50%"></div>
+          <div class="w-full" style="height:66%"></div>
+          <div class="w-full" style="height:80%"></div>
+          <div class="w-full" style="height:33%"></div>
+          <div class="w-full" style="height:75%"></div>
+          <div class="w-full" style="height:100%"></div>
+        </div>
+        <div class="mt-2 text-muted text-[10px] uppercase font-bold tracking-widest">REALTIME_QUANTUM_THREAT_MONITOR</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- ─── THE PROBLEM ─── -->
+<section class="border-t border-b border-border bg-surface-lo py-16 relative">
+  <div class="container mx-auto px-gutter">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+
+      <!-- Text -->
+      <div class="md:col-span-5">
+        <h2 class="font-mono text-xs text-accent mb-4 uppercase tracking-widest">[THREAT_ADVISORY]</h2>
+        <h3 class="font-display text-2xl md:text-3xl font-bold uppercase mb-6 leading-tight">
+          Quantum Computing: The Agentic Ticking Time Bomb.
+        </h3>
+        <p class="font-body text-base text-muted mb-6 leading-relaxed">
+          Today's AI agents on Sui communicate in plain text or with classical asymmetric encryption.
+          Retroactive quantum decryption makes every sensitive message shared between agents today
+          permanently vulnerable in the near future.
+        </p>
+        <div class="border-l-2 border-accent px-4 py-3 bg-accent-dim">
+          <p class="font-mono text-xs text-accent uppercase leading-relaxed">
+            CRITICAL: Harvest Now, Decrypt Later (HNDL) attacks are targeting cross-chain agentic workflows.
+          </p>
+        </div>
+      </div>
+
+      <!-- Visual -->
+      <div class="md:col-span-7 flex justify-center">
+        <div class="w-full aspect-video border border-border bg-black relative flex items-center justify-center overflow-hidden">
+          <img class="w-full h-full object-cover grayscale brightness-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvaWwdP65DGdgW-8xiVajgi1KO5bxr6ByF07QoQqeF0ygS67Ml7374fA8vXY8RExM2QICOTXf1o2XSCQ2uQ1fsU9Ew2DQM1hhVXwyMowL36TU9tWK3KqB6Fr9Kplp9LwQO5C30OViBnPjscZ_NK8knXK3zY8D0jD-3Y908PZgffCKONoUMd_2ylAP3dy3wbByLt6Jk7c1-Y5EQCIXHia1v4YL8fJeSLNVEwyz6SaeGMUt_s3EiTYpBKZ05kZeL5OPkouioQ8sqZASr" alt="Quantum processor visualization"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent"></div>
+          <div class="absolute bottom-4 left-4 right-4 bg-bg/90 border border-border px-4 py-3 flex items-center gap-3">
+            <span class="material-symbols-outlined text-accent" style="font-variation-settings:'FILL' 1">warning</span>
+            <span class="font-mono text-xs uppercase text-white">Vulnerability detected: RSA-2048 / ECC-256</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── SOLUTION ─── -->
+<section class="py-16">
+  <div class="container mx-auto px-gutter">
+
+    <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+      <div class="max-w-2xl">
+        <h2 class="font-mono text-xs text-accent mb-3 uppercase tracking-widest">[RESOLUTION]</h2>
+        <h3 class="font-display text-2xl md:text-3xl font-bold uppercase">Post-Quantum Security Layer.</h3>
+      </div>
+      <div class="font-mono text-xs text-muted">SUI_OBJECT_ID: 0xQUB1T...768</div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-border">
+      <div class="p-8 border-r border-border hover:bg-surface transition-colors">
+        <div class="mb-6"><span class="material-symbols-outlined text-accent" style="font-size:36px">lock</span></div>
+        <h4 class="font-display text-base font-bold uppercase mb-3">ML-KEM-768 Encryption</h4>
+        <p class="font-body text-sm text-muted leading-relaxed">Standardized lattice-based cryptography that resists Shor's algorithm and future quantum adversaries.</p>
+      </div>
+      <div class="p-8 border-r border-border hover:bg-surface transition-colors">
+        <div class="mb-6"><span class="material-symbols-outlined text-accent" style="font-size:36px">database</span></div>
+        <h4 class="font-display text-base font-bold uppercase mb-3">On-chain Key Registry</h4>
+        <p class="font-body text-sm text-muted leading-relaxed">Immutable registry for PQC public keys, allowing agents to verify identities without centralized authorities.</p>
+      </div>
+      <div class="p-8 hover:bg-surface transition-colors">
+        <div class="mb-6"><span class="material-symbols-outlined text-accent" style="font-size:36px">hub</span></div>
+        <h4 class="font-display text-base font-bold uppercase mb-3">Secure A2A Messaging</h4>
+        <p class="font-body text-sm text-muted leading-relaxed">Native Move-based encrypted communication channels optimized for low-latency agentic coordination.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="bg-surface-lo py-16 border-y border-border relative overflow-hidden">
+  <div class="container mx-auto px-gutter relative z-10">
+
+    <div class="text-center mb-16">
+      <h3 class="font-display text-4xl md:text-6xl font-bold uppercase" style="letter-spacing:-0.02em">How It Works</h3>
+      <p class="font-mono text-xs text-muted uppercase tracking-widest mt-3">PROTOCOL_SEQUENCE_O1–O3</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Step 1 -->
+      <div class="relative group">
+        <div class="absolute -top-10 -left-2 font-display text-[100px] font-black leading-none text-white/5 pointer-events-none select-none">01</div>
+        <div class="relative z-10 bg-bg border border-border p-8 hover:border-accent transition-colors">
+          <h5 class="font-mono text-xs text-accent mb-3 uppercase tracking-widest">REGISTRY_ANCHOR</h5>
+          <h4 class="font-display text-base font-bold uppercase mb-4">Anchor Public Key</h4>
+          <p class="font-body text-sm text-muted leading-relaxed">The initiator agent generates a PQC keypair and anchors the public component to a Sui Move contract, creating a verifiable on-chain identity.</p>
+          <div class="mt-6 pt-4 border-t border-border font-mono text-[11px] text-muted/50">
+            CMD: qubit register --key ./pqc.pub
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="relative group">
+        <div class="absolute -top-10 -left-2 font-display text-[100px] font-black leading-none text-white/5 pointer-events-none select-none">02</div>
+        <div class="relative z-10 bg-bg border border-border p-8 hover:border-accent transition-colors">
+          <h5 class="font-mono text-xs text-accent mb-3 uppercase tracking-widest">P2P_DISCOVERY</h5>
+          <h4 class="font-display text-base font-bold uppercase mb-4">Fetch Recipient Key</h4>
+          <p class="font-body text-sm text-muted leading-relaxed">The recipient agent queries the Sui blockchain to fetch the sender's authenticated PQC public key from the global registry.</p>
+          <div class="mt-6 pt-4 border-t border-border font-mono text-[11px] text-muted/50">
+            QUERY: qubit lookup --address 0x...
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="relative group">
+        <div class="absolute -top-10 -left-2 font-display text-[100px] font-black leading-none text-white/5 pointer-events-none select-none">03</div>
+        <div class="relative z-10 bg-bg border border-border p-8 hover:border-accent transition-colors">
+          <h5 class="font-mono text-xs text-accent mb-3 uppercase tracking-widest">TUNNEL_INIT</h5>
+          <h4 class="font-display text-base font-bold uppercase mb-4">Establish Channel</h4>
+          <p class="font-body text-sm text-muted leading-relaxed">Both agents run ML-KEM-768 key encapsulation to derive a shared symmetric AES-256-GCM secret. The server never sees plaintext.</p>
+          <div class="mt-6 pt-4 border-t border-border font-mono text-[11px] text-muted/50">
+            STATUS: CHANNEL_SECURED_PQC
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── TECHNICAL SPECS ─── -->
+<section class="py-16">
+  <div class="container mx-auto px-gutter">
+    <div class="border-2 border-white p-8 bg-bg">
+
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <h3 class="font-display text-2xl font-bold uppercase">Technical Specs</h3>
+        <div class="flex flex-wrap gap-3">
+          <span class="border-2 border-accent text-accent px-3 py-1 font-mono text-[10px] uppercase tracking-widest">MOVE_CONTRACT</span>
+          <span class="border border-border text-muted px-3 py-1 font-mono text-[10px] uppercase tracking-widest">AES-256-GCM</span>
+          <span class="border border-border text-muted px-3 py-1 font-mono text-[10px] uppercase tracking-widest">ML-KEM-768</span>
+          <span class="bg-accent text-white px-3 py-1 font-mono text-[10px] uppercase tracking-widest">TESTNET_LIVE</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="border-l-2 border-accent pl-4">
+          <div class="font-mono text-[10px] text-muted uppercase mb-2 tracking-widest">Throughput</div>
+          <div class="font-display text-2xl font-bold">120K TPS</div>
+        </div>
+        <div class="border-l-2 border-accent pl-4">
+          <div class="font-mono text-[10px] text-muted uppercase mb-2 tracking-widest">Latency</div>
+          <div class="font-display text-2xl font-bold">&lt; 400MS</div>
+        </div>
+        <div class="border-l-2 border-accent pl-4">
+          <div class="font-mono text-[10px] text-muted uppercase mb-2 tracking-widest">Key Size</div>
+          <div class="font-display text-2xl font-bold">1184 BYTES</div>
+        </div>
+        <div class="border-l-2 border-accent pl-4">
+          <div class="font-mono text-[10px] text-muted uppercase mb-2 tracking-widest">Consensus</div>
+          <div class="font-display text-2xl font-bold">MYSTICETI</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── AGENTIC WEB ─── -->
+<section class="py-16 bg-bg overflow-hidden">
+  <div class="container mx-auto px-gutter">
+    <div class="relative border-2 border-white p-12 flex flex-col md:flex-row items-center gap-12">
+
+      <!-- Decorative corner accent -->
+      <div class="absolute top-0 right-0 w-24 h-24 bg-accent/10 border-b-2 border-l-2 border-accent pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 w-16 h-16 bg-accent/10 border-t-2 border-r-2 border-accent pointer-events-none"></div>
+
+      <div class="md:w-1/2 relative z-10">
+        <h3 class="font-display text-3xl md:text-5xl font-bold uppercase mb-6 leading-tight" style="letter-spacing:-0.02em">
+          Security is Not an Afterthought.
+        </h3>
+        <p class="font-body text-base text-muted mb-6 leading-relaxed">
+          We are building the HTTP of the agentic web. As AI agents move from simple tools to autonomous economic actors on Sui, Qubit provides the fundamental trust layer required for secure coordination.
+        </p>
+        <div class="border-l-2 border-accent pl-4">
+          <p class="font-mono text-sm text-accent leading-relaxed">
+            "Without post-quantum security, decentralized AI is a house built on sand. Qubit provides the bedrock."
+          </p>
+        </div>
+      </div>
+
+      <div class="md:w-1/2 flex justify-center">
+        <div class="relative group cursor-crosshair">
+          <img class="w-64 h-64 md:w-72 md:h-72 object-cover grayscale brightness-40 border border-border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAV31VHF71nl9tlf4s1ObN0A6eiVtvtq_BWpEYrZ2tzYEPBKQZo1aMJ8IvCVRyf5na3Q2x83Ztd2XVAvjukm0SaTivONkoEsOOif0mOLbs-MMhSjpoIpnQeWiYSR5Q2q0TcZd9w9aIQ-aP7C1NHui7PzC7Fm9nk-B3U6zI1PPHVUIFwiwKvG8Nq5ebu_SrMFeAJpeEq7Qjr36Qx3H3KSuEj0ACoK4o3FLONKIItxjWBXUVMJymsmnMAeiHd6LsE5BJ6GUYr2My6C7B8" alt="Agent network visualization"/>
+          <!-- Red tint overlay -->
+          <div class="absolute inset-0 bg-accent/10 group-hover:bg-accent/20 transition-colors"></div>
+          <div class="absolute -inset-2 border border-accent/30 group-hover:border-accent/70 transition-colors"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="w-full px-gutter py-10 flex flex-col md:flex-row justify-between items-start gap-8 border-t-2 border-white bg-bg">
+  <div class="flex flex-col gap-3">
+    <div class="font-mono text-xs font-bold uppercase tracking-widest text-white">QUBIT_PROTOCOLS</div>
+    <p class="font-mono text-xs lowercase text-muted max-w-xs">
+      © 2026 QUBIT_PROTOCOLS // SUI_NETWORK_INFRASTRUCTURE
+    </p>
+    <p class="font-mono text-[10px] text-accent uppercase tracking-widest">
+      "Qubit deploys the first post-quantum key registry on Sui — any agent can build on top of it."
+    </p>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-10">
+    <div class="flex flex-col gap-2">
+      <span class="font-mono text-[10px] text-muted uppercase tracking-widest mb-1 opacity-60">SOURCE</span>
+      <a class="font-mono text-xs lowercase text-muted hover:text-white transition-colors" href="#">github_repo</a>
+      <a class="font-mono text-xs lowercase text-muted hover:text-white transition-colors" href="#">sui_explorer</a>
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="font-mono text-[10px] text-muted uppercase tracking-widest mb-1 opacity-60">RESOURCES</span>
+      <a class="font-mono text-xs lowercase text-muted hover:text-white transition-colors" href="#">documentation</a>
+      <a class="font-mono text-xs lowercase text-muted hover:text-white transition-colors" href="#">white_paper</a>
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="font-mono text-[10px] text-muted uppercase tracking-widest mb-1 opacity-60">COMMUNITY</span>
+      <a class="font-mono text-xs lowercase text-muted hover:text-white transition-colors" href="#">discord_ops</a>
+      <a class="font-mono text-xs lowercase text-muted hover:text-white transition-colors" href="#">ecosystem_portal</a>
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="font-mono text-[10px] text-muted uppercase tracking-widest mb-1 opacity-60">EVENTS</span>
+      <a class="font-mono text-xs text-accent hover:brightness-125 transition-colors uppercase tracking-widest" href="#">SUI_OVERFLOW_2026</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

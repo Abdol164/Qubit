@@ -1,0 +1,16 @@
+{
+  "name": "qubit",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Post-quantum secure communication layer for autonomous AI agents on Sui",
+  "scripts": {
+    "demo": "bun agent-demo.ts"
+  },
+  "dependencies": {
+    "@mysten/sui": "^2.17.0",
+    "mlkem": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  }
+}
